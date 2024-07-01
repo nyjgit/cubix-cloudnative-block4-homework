@@ -1,0 +1,7 @@
+namespace: hw4-prod
+resources:
+- ../../base
+- ingress-frontend.yaml
+patches:
+- path: patch-replicacount-backend.yaml
+- path: patch-replicacount-frontend.yaml

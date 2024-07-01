@@ -1,0 +1,7 @@
+commonLabels:
+  training: block4
+resources:
+- deployment-backend.yaml
+- deployment-frontend.yaml
+- service-backend.yaml
+- service-frontend.yaml

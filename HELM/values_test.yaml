@@ -1,0 +1,19 @@
+# env:
+#   frontapp:
+#   - name: JAVA_OPTS
+#     value: "-Dspring.main.banner-mode=off"
+#   - name: CUBIX_HOMEWORK
+#     value: "-----------"
+#   backapp:
+#   - name: JAVA_OPTS
+#     value: "-Dspring.main.banner-mode=off"
+#   - name: CUBIX_HOMEWORK
+#     value: "-----------"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: other.cubix.localhost
+      paths:
+        - path: /frontapp
+          pathType: Prefix

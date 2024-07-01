@@ -1,0 +1,151 @@
+kubectl create ns hw4-dev
+kubectl create ns hw4-test
+kubectl create ns hw4-prod
+
+
+
+
+# Kustomize
+
+
+# running the commands from the cubix-cloudnative-block4-homework/Kustomize directory
+
+# creating base and overlays folders and the YAML files
+# rendering the solution for checking:
+	# kubectl kustomize .\overlays\dev
+	# kubectl kustomize .\overlays\test
+	# kubectl kustomize .\overlays\prod
+
+kubectl apply -k .\overlays\dev 
+	# testing with Postman
+		# kubectl get pods -n hw4-dev
+			# Name of the pods: backapp-6fc56b7f86-9gms8 and frontapp-59d69b5d5d-drhmb
+		# kubectl port-forward pod/backapp-6fc56b7f86-9gms8 8081:8080 -n hw4-dev
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# kubectl port-forward pod/frontapp-59d69b5d5d-drhmb 8082:8080 -n hw4-dev
+			# sending request with Postman
+				# http://localhost:8082/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+				# http://localhost:8082/frontapp 		--> ... "backappMessage": "frontapp" ...
+			# test successful, ^C
+
+kubectl apply -k .\overlays\test
+	# testing with Postman
+		# kubectl get pods -n hw4-test
+			# Name of the backend pod: backapp-6fc56b7f86-p4rzh
+		# kubectl port-forward pod/backapp-6fc56b7f86-p4rzh 8081:8080 -n hw4-test
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# sending requests with Postman to the frontend
+			# http://other.cubix.localhost:8080/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+			# http://other.cubix.localhost:8080/frontapp 		--> ... "backappMessage": "frontapp" ...
+		# test successful
+
+kubectl apply -k .\overlays\prod
+	# testing with Postman
+		# kubectl get pods -n hw4-prod		--> 2 replicas for both apps ✓
+			# Name of one of the backend pods: backapp-6fc56b7f86-7qgtd
+		# kubectl port-forward pod/backapp-6fc56b7f86-7qgtd 8081:8080 -n hw4-prod
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# sending requests with Postman to the frontend
+			# http://application.cubix.localhost:8080/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+			# http://application.cubix.localhost:8080/frontapp	 		--> ... "backappMessage": "frontapp" ...
+		# test successful
+
+
+kubectl delete -k .\overlays\dev
+kubectl delete -k .\overlays\test
+kubectl delete -k .\overlays\prod
+
+# alternatively, if there is no need for the namespaces anymore:
+	# kubectl delete ns hw4-dev hw4-test hw4-prod
+
+
+
+
+
+
+# HELM
+
+
+# running the commands from the cubix-cloudnative-block4-homework/HELM directory
+
+helm create block4hw
+
+# preparing the templates for the frontend
+# creating values_dev.yaml, values_prod.yaml, values_test.yaml outside of the chart directory
+
+helm template devrelease .\block4hw\ -n hw4-dev -f .\values_dev.yaml
+helm install devrelease .\block4hw\ -n hw4-dev -f .\values_dev.yaml
+	# testing with Postman
+		# kubectl get pods -n hw4-dev
+			# Name of the pod: devrelease-block4hw-frontapp-98bb49864-lsslb
+		# kubectl port-forward pod/devrelease-block4hw-frontapp-98bb49864-lsslb 8081:8080 -n hw4-dev
+			# sending request with Postman (http://localhost:8081/frontapp/local) --> ... "backappMessage": "frontapp:frontapp" ...
+			# test successful, ^C
+
+	# testing different environment variables from values_dev.yaml
+		# helm upgrade devrelease .\block4hw\ -n hw4-dev -f .\values_dev.yaml
+
+		# kubectl get pods -n hw4-dev
+			# Name of the pod: devrelease-block4hw-frontapp-6848b97cd5-hb482
+		# kubectl port-forward pod/devrelease-block4hw-frontapp-6848b97cd5-hb482 8081:8080 -n hw4-dev
+			# sending request with Postman (http://localhost:8081/frontapp/local) --> ... "frontappHomeworkOwner": "-----------" ...
+			# test successful, ^C
+
+		# kubectl logs pod/devrelease-block4hw-frontapp-6848b97cd5-hb482 -n hw4-dev
+			# no banner ✓
+
+helm uninstall devrelease -n hw4-dev
+
+
+# creating templates for the backend
+
+helm template devrelease .\block4hw\ -n hw4-dev -f .\values_dev.yaml
+helm install devrelease .\block4hw\ -n hw4-dev -f .\values_dev.yaml
+	# testing with Postman
+		# kubectl get pods -n hw4-dev
+			# Name of the pods: devrelease-block4hw-backapp-86bddc8598-9wmj5 and devrelease-block4hw-frontapp-98bb49864-djfn7
+		# kubectl port-forward pod/devrelease-block4hw-backapp-86bddc8598-9wmj5 8081:8080 -n hw4-dev
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# kubectl port-forward pod/devrelease-block4hw-frontapp-98bb49864-djfn7 8082:8080 -n hw4-dev
+			# sending request with Postman
+				# http://localhost:8082/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+				# http://localhost:8082/frontapp 		--> ... "backappMessage": "frontapp" ...
+			# test successful, ^C
+
+helm template testrelease .\block4hw\ -n hw4-test -f .\values_test.yaml
+helm install testrelease .\block4hw\ -n hw4-test -f .\values_test.yaml
+	# testing with Postman
+		# kubectl get pods -n hw4-test
+			# Name of the backend pod: testrelease-block4hw-backapp-76b755bf49-rsql4
+		# kubectl port-forward pod/testrelease-block4hw-backapp-76b755bf49-rsql4 8081:8080 -n hw4-test
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# sending requests with Postman to the frontend
+			# http://other.cubix.localhost:8080/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+			# http://other.cubix.localhost:8080/frontapp 		--> ... "backappMessage": "frontapp" ...
+		# test successful
+
+helm template prodrelease .\block4hw\ -n hw4-prod -f .\values_prod.yaml
+helm install prodrelease .\block4hw\ -n hw4-prod -f .\values_prod.yaml
+	# testing with Postman
+		# kubectl get pods -n hw4-prod		--> 2 replicas for both apps ✓
+			# Name of one of the backend pods: prodrelease-block4hw-backapp-79b957d68-dd5mq
+		# kubectl port-forward pod/prodrelease-block4hw-backapp-79b957d68-dd5mq 8081:8080 -n hw4-prod
+			# sending request with Postman (http://localhost:8081/backapp) --> ... "message": "backapp" ...
+			# test successful, ^C
+		# sending requests with Postman to the frontend
+			# http://application.cubix.localhost:8080/frontapp/local	--> ... "backappMessage": "frontapp:frontapp" ...
+			# http://application.cubix.localhost:8080/frontapp	 		--> ... "backappMessage": "frontapp" ...
+		# test successful
+
+
+kubectl delete ns hw4-dev hw4-test hw4-prod
+
+# alternatively, if we want to keep the namespaces:
+	# helm uninstall devrelease -n hw4-dev
+	# helm uninstall testrelease -n hw4-test
+	# helm uninstall prodrelease -n hw4-prod
